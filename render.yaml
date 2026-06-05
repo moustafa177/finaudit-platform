@@ -7,7 +7,7 @@ services:
     env: node
     plan: free
     region: frankfurt
-    buildCommand: "npm install --legacy-peer-deps && npx turbo run build --filter=@finaudit/api..."
+    buildCommand: "npm install --legacy-peer-deps --include=dev && cd apps/api && npm install --legacy-peer-deps --include=dev && npm run build"
     startCommand: "node -r tsconfig-paths/register apps/api/dist/src/main"
     envVars:
       - key: NODE_ENV
@@ -41,7 +41,7 @@ services:
     env: node
     plan: free
     region: frankfurt
-    buildCommand: "npm install --legacy-peer-deps && npx turbo run build --filter=@finaudit/web..."
+    buildCommand: "npm install --legacy-peer-deps --include=dev && cd apps/web && npm install --legacy-peer-deps --include=dev && npm run build"
     startCommand: "cd apps/web && npm start"
     envVars:
       - key: NODE_ENV
