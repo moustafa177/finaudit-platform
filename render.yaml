@@ -7,9 +7,8 @@ services:
     env: node
     plan: free
     region: frankfurt
-    rootDir: apps/api
-    buildCommand: "npm install --legacy-peer-deps && npm run build"
-    startCommand: "node -r tsconfig-paths/register dist/src/main"
+    buildCommand: "npm install --legacy-peer-deps && cd apps/api && npm install --legacy-peer-deps && npm run build"
+    startCommand: "cd apps/api && node -r tsconfig-paths/register dist/src/main"
     envVars:
       - key: NODE_ENV
         value: production
@@ -42,9 +41,8 @@ services:
     env: node
     plan: free
     region: frankfurt
-    rootDir: apps/web
-    buildCommand: "npm install --legacy-peer-deps && npm run build"
-    startCommand: "npm start"
+    buildCommand: "npm install --legacy-peer-deps && cd apps/web && npm install --legacy-peer-deps && npm run build"
+    startCommand: "cd apps/web && npm start"
     envVars:
       - key: NODE_ENV
         value: production
