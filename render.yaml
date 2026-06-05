@@ -5,14 +5,10 @@ services:
   - type: web
     name: finaudit-api
     env: node
-    plan: starter
-    buildCommand: >
-      cd apps/api &&
-      npm install --legacy-peer-deps &&
-      npm run build
-    startCommand: >
-      cd apps/api &&
-      node -r tsconfig-paths/register dist/src/main
+    plan: free
+    region: frankfurt
+    buildCommand: "cd apps/api && npm install --legacy-peer-deps && npm run build"
+    startCommand: "cd apps/api && node -r tsconfig-paths/register dist/src/main"
     envVars:
       - key: NODE_ENV
         value: production
@@ -25,9 +21,9 @@ services:
           name: finaudit-db
           property: connectionString
       - key: JWT_SECRET
-        sync: false
+        generateValue: true
       - key: JWT_REFRESH_SECRET
-        sync: false
+        generateValue: true
       - key: JWT_EXPIRES_IN
         value: 15m
       - key: JWT_REFRESH_EXPIRES_IN
@@ -43,14 +39,10 @@ services:
   - type: web
     name: finaudit-web
     env: node
-    plan: starter
-    buildCommand: >
-      cd apps/web &&
-      npm install --legacy-peer-deps &&
-      npm run build
-    startCommand: >
-      cd apps/web &&
-      npm start
+    plan: free
+    region: frankfurt
+    buildCommand: "cd apps/web && npm install --legacy-peer-deps && npm run build"
+    startCommand: "cd apps/web && npm start"
     envVars:
       - key: NODE_ENV
         value: production
@@ -59,24 +51,13 @@ services:
       - key: NEXT_PUBLIC_APP_URL
         value: https://finaudit-web.onrender.com
 
+databases:
   # ============================================
   # PostgreSQL Database
   # ============================================
-  - type: pserv
-    name: finaudit-db
-    ipAllowList: []
-    plan: starter
-    postgresVersion: 16
+  - name: finaudit-db
+    plan: free
+    region: frankfurt
     databaseName: finaudit_db
     user: finaudit_user
-
-# ============================================
-# Static Site (Optional - for docs)
-# ============================================
-# - type: static_site
-#   name: finaudit-docs
-#   buildCommand: echo "Documentation site"
-#   staticPublishPath: ./docs
-#   routes:
-#     - path: /docs
-#       destination: /index.html
+    postgresMajorVersion: 16
