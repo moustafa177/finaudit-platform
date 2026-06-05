@@ -1,20 +1,25 @@
-FROM node:20-alpine AS base
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
+FROM node:20-alpine
 
-FROM node:20-alpine AS build
 WORKDIR /app
-COPY --from=base /app/node_modules ./node_modules
-COPY . .
-RUN npm run build
 
-FROM node:20-alpine AS production
-WORKDIR /app
-ENV NODE_ENV=production
-COPY --from=build /app/.next ./.next
-COPY --from=build /app/public ./public
-COPY --from=base /app/node_modules ./node_modules
+# Copy root package files
 COPY package*.json ./
+COPY turbo.json ./
+
+# Copy packages
+COPY packages/ ./packages/
+
+# Copy app
+COPY apps/web/ ./apps/web/
+
+# Install ALL dependencies
+RUN npm install --legacy-peer-deps
+
+# Build web
+RUN cd apps/web && npm run build
+
 EXPOSE 3000
-CMD ["npm", "start"]
+
+ENV NODE_ENV=production
+
+CMD ["sh", "-c", "cd apps/web && npm start"]

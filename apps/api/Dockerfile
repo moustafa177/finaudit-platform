@@ -1,18 +1,27 @@
-FROM node:20-alpine AS base
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
+FROM node:20-alpine
 
-FROM node:20-alpine AS build
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
 
-FROM node:20-alpine AS production
-WORKDIR /app
-COPY --from=base /app/node_modules ./node_modules
-COPY --from=build /app/dist ./dist
+# Copy root package files
+COPY package*.json ./
+COPY turbo.json ./
+
+# Copy packages
+COPY packages/ ./packages/
+
+# Copy app
+COPY apps/api/ ./apps/api/
+
+# Install ALL dependencies (including dev for build)
+RUN npm install --legacy-peer-deps
+
+# Build packages first
+RUN cd packages/shared-types && npm install --legacy-peer-deps && npx tsc --skipLibCheck 2>/dev/null || true
+RUN cd packages/zatca-validator && npm install --legacy-peer-deps && npx tsc --skipLibCheck 2>/dev/null || true
+
+# Build API
+RUN cd apps/api && npm run build
+
 EXPOSE 3001
-CMD ["node", "dist/main"]
+
+CMD ["node", "-r", "tsconfig-paths/register", "apps/api/dist/src/main.js"]

@@ -4,11 +4,11 @@ services:
   # ============================================
   - type: web
     name: finaudit-api
-    env: node
+    env: docker
     plan: free
     region: frankfurt
-    buildCommand: "npm install --legacy-peer-deps && npm run build --workspace=packages/shared-types && npm run build --workspace=packages/zatca-validator && cd apps/api && npm run build"
-    startCommand: "cd apps/api && node -r tsconfig-paths/register dist/src/main"
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
     envVars:
       - key: NODE_ENV
         value: production
@@ -38,11 +38,11 @@ services:
   # ============================================
   - type: web
     name: finaudit-web
-    env: node
+    env: docker
     plan: free
     region: frankfurt
-    buildCommand: "npm install --legacy-peer-deps && npm run build --workspace=packages/shared-types && cd apps/web && npm run build"
-    startCommand: "cd apps/web && npm start"
+    dockerfilePath: ./apps/web/Dockerfile
+    dockerContext: .
     envVars:
       - key: NODE_ENV
         value: production
