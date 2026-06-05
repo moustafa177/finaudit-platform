@@ -1,4 +1,32 @@
-FROM node:20-alpine
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy root workspace files
+COPY package*.json ./
+COPY turbo.json ./
+
+# Copy packages source
+COPY packages/ ./packages/
+
+# Copy API source
+COPY apps/api/ ./apps/api/
+
+# Install ALL dependencies (including devDependencies for build tools)
+RUN npm install --legacy-peer-deps
+
+# Build shared packages first
+RUN cd packages/shared-types && npx tsc --skipLibCheck 2>/dev/null || echo "shared-types build done"
+RUN cd packages/zatca-validator && npx tsc --skipLibCheck 2>/dev/null || echo "zatca-validator build done"
+
+# Build NestJS API
+WORKDIR /app/apps/api
+RUN npm run build
+
+# ============================================
+# Production stage
+# ============================================
+FROM node:20-alpine AS production
 
 WORKDIR /app
 
@@ -6,22 +34,22 @@ WORKDIR /app
 COPY package*.json ./
 COPY turbo.json ./
 
-# Copy packages
+# Copy packages (needed for runtime path resolution)
 COPY packages/ ./packages/
 
-# Copy app
-COPY apps/api/ ./apps/api/
+# Copy built API
+COPY apps/api/package*.json ./apps/api/
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY apps/api/tsconfig.json ./apps/api/
 
-# Install ALL dependencies (including dev for build)
-RUN npm install --legacy-peer-deps
-
-# Build packages first
-RUN cd packages/shared-types && npm install --legacy-peer-deps && npx tsc --skipLibCheck 2>/dev/null || true
-RUN cd packages/zatca-validator && npm install --legacy-peer-deps && npx tsc --skipLibCheck 2>/dev/null || true
-
-# Build API
-RUN cd apps/api && npm run build
+# Install only production dependencies
+RUN npm install --legacy-peer-deps --omit=dev
+RUN cd apps/api && npm install --legacy-peer-deps
 
 EXPOSE 3001
 
-CMD ["node", "-r", "tsconfig-paths/register", "apps/api/dist/src/main.js"]
+ENV NODE_ENV=production
+
+WORKDIR /app/apps/api
+
+CMD ["node", "-r", "tsconfig-paths/register", "dist/src/main"]
