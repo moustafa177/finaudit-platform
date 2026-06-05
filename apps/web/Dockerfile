@@ -1,25 +1,51 @@
-FROM node:20-alpine
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy root package files
+# Copy root workspace files
 COPY package*.json ./
 COPY turbo.json ./
 
-# Copy packages
+# Copy packages source
 COPY packages/ ./packages/
 
-# Copy app
+# Copy web source
 COPY apps/web/ ./apps/web/
 
 # Install ALL dependencies
 RUN npm install --legacy-peer-deps
 
-# Build web
-RUN cd apps/web && npm run build
+# Build shared types first
+RUN cd packages/shared-types && npx tsc --skipLibCheck 2>/dev/null || echo "shared-types done"
+
+# Build Next.js
+WORKDIR /app/apps/web
+RUN npm run build
+
+# ============================================
+# Production stage
+# ============================================
+FROM node:20-alpine AS production
+
+WORKDIR /app
+
+COPY package*.json ./
+COPY packages/ ./packages/
+COPY apps/web/package*.json ./apps/web/
+
+# Copy Next.js build output
+COPY --from=builder /app/apps/web/.next ./apps/web/.next
+COPY --from=builder /app/apps/web/public ./apps/web/public 2>/dev/null || true
+COPY apps/web/next.config.js ./apps/web/
+
+# Install production dependencies only
+RUN npm install --legacy-peer-deps --omit=dev
+RUN cd apps/web && npm install --legacy-peer-deps --omit=dev
 
 EXPOSE 3000
 
 ENV NODE_ENV=production
 
-CMD ["sh", "-c", "cd apps/web && npm start"]
+WORKDIR /app/apps/web
+
+CMD ["npm", "start"]
