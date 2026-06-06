@@ -1,4 +1,4 @@
-FROM node:20-alpine AS builder
+FROM node:20-bookworm-slim AS builder
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ COPY package*.json turbo.json ./
 COPY packages ./packages
 COPY apps/api ./apps/api
 
-# Install ALL dependencies (including devDeps)
+# Install dependencies with node-gyp support
 RUN npm ci --legacy-peer-deps
 
 # Build API service
@@ -19,7 +19,7 @@ RUN npm run build
 # ============================================
 # Production Stage
 # ============================================
-FROM node:20-alpine
+FROM node:20-bookworm-slim
 
 WORKDIR /app
 
