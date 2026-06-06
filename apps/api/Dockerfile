@@ -42,6 +42,5 @@ WORKDIR /app/apps/api
 
 EXPOSE 3001
 
-# No tsconfig-paths needed - @finaudit/* resolved via npm workspace symlinks
-# package.json main points to .js files (not .ts)
-CMD ["node", "dist/src/main.js"]
+# tsconfig-paths/register resolves path aliases (@finaudit/*) at runtime
+CMD ["node", "-r", "tsconfig-paths/register", "dist/src/main.js"]
