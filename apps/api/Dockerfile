@@ -1,32 +1,19 @@
-FROM node:20-bookworm-slim AS builder
-
-WORKDIR /app
-
-# Copy everything
-COPY . .
-
-# Install and build
-RUN npm ci --legacy-peer-deps && \
-    npm run build --workspace=@finaudit/api
-
-# ============================================
-# Production
-# ============================================
+# Production-only image - assumes API is already built locally
 FROM node:20-bookworm-slim
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy built dist and package files
-COPY --from=builder /app/apps/api/dist /app/dist
-COPY --from=builder /app/apps/api/package.json /app/
-COPY --from=builder /app/package*.json /app/
-COPY --from=builder /app/packages /app/packages
+# Copy pre-built dist
+COPY apps/api/dist ./dist
+COPY apps/api/package*.json ./
+COPY packages ./packages
+COPY package*.json ./
 
-# Install production deps
-RUN npm ci --legacy-peer-deps --omit=dev --workspace=@finaudit/api && npm cache clean --force
+# Install only production dependencies
+RUN npm install --omit=dev tsconfig-paths
 
 EXPOSE 3001
 
-CMD ["node", "-r", "tsconfig-paths/register", "/app/dist/src/main.js"]
+CMD ["node", "-r", "tsconfig-paths/register", "dist/src/main.js"]
