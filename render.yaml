@@ -7,8 +7,8 @@ services:
     env: docker
     plan: starter
     region: frankfurt
-    image:
-      url: docker.io/YOUR_DOCKER_USERNAME/finaudit-api:latest
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
     healthCheckPath: /api/v1/health
     envVars:
       - key: NODE_ENV
