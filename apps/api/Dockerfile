@@ -8,10 +8,10 @@ COPY turbo.json ./
 COPY packages/ ./packages/
 COPY apps/api/ ./apps/api/
 
-# Install everything (including devDependencies for nest build)
+# Install everything
 RUN npm install --legacy-peer-deps
 
-# Build NestJS API (packages/src/*.js already compiled locally)
+# Build NestJS API
 WORKDIR /app/apps/api
 RUN npm run build
 
@@ -24,24 +24,24 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy package files
+# Copy package files for workspace setup
 COPY package*.json ./
 COPY turbo.json ./
 
-# Copy packages WITH their compiled src/*.js files
+# Copy packages (main now points to .js files)
 COPY packages/ ./packages/
 
 # Copy API
 COPY apps/api/package*.json ./apps/api/
-COPY apps/api/tsconfig.json ./apps/api/
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
 
-# Install deps (workspace + runtime)
-RUN npm install --legacy-peer-deps
-RUN cd apps/api && npm install --legacy-peer-deps
+# Install (creates node_modules/@finaudit/* symlinks to packages/)
+RUN npm install --legacy-peer-deps --omit=dev
 
 WORKDIR /app/apps/api
 
 EXPOSE 3001
 
-CMD ["node", "-r", "tsconfig-paths/register", "dist/src/main.js"]
+# No tsconfig-paths needed - @finaudit/* resolved via npm workspace symlinks
+# package.json main points to .js files (not .ts)
+CMD ["node", "dist/src/main.js"]
