@@ -4,11 +4,11 @@ services:
   # ============================================
   - type: web
     name: finaudit-api
-    env: docker
+    runtime: node
     plan: free
     region: frankfurt
-    dockerfilePath: ./apps/api/Dockerfile
-    dockerContext: .
+    buildCommand: npm run build --workspace=@finaudit/api
+    startCommand: node -r tsconfig-paths/register apps/api/dist/src/main.js
     envVars:
       - key: NODE_ENV
         value: production
