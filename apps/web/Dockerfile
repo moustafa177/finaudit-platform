@@ -15,9 +15,6 @@ COPY apps/web/ ./apps/web/
 # Install ALL dependencies
 RUN npm install --legacy-peer-deps
 
-# Build shared types first
-RUN cd packages/shared-types && npx tsc --skipLibCheck 2>/dev/null || echo "shared-types done"
-
 # Build Next.js
 WORKDIR /app/apps/web
 RUN npm run build
@@ -35,7 +32,7 @@ COPY apps/web/package*.json ./apps/web/
 
 # Copy Next.js build output
 COPY --from=builder /app/apps/web/.next ./apps/web/.next
-COPY --from=builder /app/apps/web/public ./apps/web/public 2>/dev/null || true
+COPY --from=builder /app/apps/web/public ./apps/web/public
 COPY apps/web/next.config.js ./apps/web/
 
 # Install production dependencies only
