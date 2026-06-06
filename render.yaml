@@ -5,10 +5,10 @@ services:
   - type: web
     name: finaudit-api
     env: docker
-    plan: free
+    plan: starter
     region: frankfurt
-    dockerfilePath: ./apps/api/Dockerfile
-    dockerContext: .
+    image:
+      url: docker.io/YOUR_DOCKER_USERNAME/finaudit-api:latest
     healthCheckPath: /api/v1/health
     envVars:
       - key: NODE_ENV
