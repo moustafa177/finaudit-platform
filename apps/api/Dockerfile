@@ -3,17 +3,20 @@ FROM node:20-alpine
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV PORT=3001
 
-# Copy everything - single layer
-COPY package*.json ./
+# Install dependencies first
+COPY package*.json turbo.json ./
+RUN npm install --legacy-peer-deps
+
+# Copy code
 COPY packages ./packages
 COPY apps/api ./apps/api
 
-# Install and build in one step
-RUN npm ci --legacy-peer-deps && \
-    npm run build --workspace=@finaudit/api && \
-    npm prune --omit=dev
+# Build API
+RUN npm run build --workspace=@finaudit/api
+
+# Clean up dev dependencies
+RUN npm prune --omit=dev
 
 WORKDIR /app/apps/api
 
