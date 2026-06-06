@@ -1,17 +1,38 @@
+FROM node:20-bookworm-slim AS base
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json turbo.json ./
+COPY packages ./packages
+COPY apps/api ./apps/api
+
+# ============================================
+# Build Stage
+# ============================================
+FROM base AS builder
+
+RUN npm ci --legacy-peer-deps
+
+WORKDIR /app/apps/api
+RUN npm run build
+
+# ============================================
+# Runtime Stage
+# ============================================
 FROM node:20-bookworm-slim
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy everything from repo
-COPY . .
+COPY package*.json turbo.json ./
+COPY packages ./packages
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY apps/api/package*.json ./apps/api/
 
-# Skip npm CI install - packages are already in node_modules from build
-# Just install runtime dependency if missing
-RUN npm install --omit=dev --legacy-peer-deps 2>&1 || true
+RUN npm ci --legacy-peer-deps --omit=dev
 
-# Assume app/api/dist exists from pre-build
 WORKDIR /app/apps/api
 
 EXPOSE 3001
