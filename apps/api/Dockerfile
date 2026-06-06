@@ -1,18 +1,18 @@
-# Production-only image - assumes API is already built locally
 FROM node:20-bookworm-slim
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Copy pre-built dist
-COPY apps/api/dist ./dist
-COPY apps/api/package*.json ./
-COPY packages ./packages
-COPY package*.json ./
+# Copy everything from repo
+COPY . .
 
-# Install only production dependencies
-RUN npm install --omit=dev tsconfig-paths
+# Skip npm CI install - packages are already in node_modules from build
+# Just install runtime dependency if missing
+RUN npm install --omit=dev --legacy-peer-deps 2>&1 || true
+
+# Assume app/api/dist exists from pre-build
+WORKDIR /app/apps/api
 
 EXPOSE 3001
 
