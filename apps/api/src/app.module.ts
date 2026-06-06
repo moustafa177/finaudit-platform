@@ -25,7 +25,6 @@ import { ReportsModule } from './reports/reports.module'
         logging: config.get('NODE_ENV') === 'development',
         retryAttempts: 10,
         retryDelay: 3000,
-        ssl: config.get('NODE_ENV') === 'production' ? { rejectUnauthorized: false } : false,
       }),
       inject: [ConfigService],
     }),

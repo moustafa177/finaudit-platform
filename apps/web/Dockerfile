@@ -15,8 +15,9 @@ COPY apps/web/ ./apps/web/
 # Install ALL dependencies
 RUN npm install --legacy-peer-deps
 
-# Build Next.js
+# Build Next.js from apps/web
 WORKDIR /app/apps/web
+ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 # ============================================
@@ -26,23 +27,16 @@ FROM node:20-alpine AS production
 
 WORKDIR /app
 
-COPY package*.json ./
-COPY packages/ ./packages/
-COPY apps/web/package*.json ./apps/web/
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Copy Next.js build output
-COPY --from=builder /app/apps/web/.next ./apps/web/.next
+# Copy standalone output
+COPY --from=builder /app/apps/web/.next/standalone ./
+COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=builder /app/apps/web/public ./apps/web/public
-COPY apps/web/next.config.js ./apps/web/
-
-# Install production dependencies only
-RUN npm install --legacy-peer-deps --omit=dev
-RUN cd apps/web && npm install --legacy-peer-deps --omit=dev
 
 EXPOSE 3000
 
-ENV NODE_ENV=production
+ENV PORT=3000
 
-WORKDIR /app/apps/web
-
-CMD ["npm", "start"]
+CMD ["node", "apps/web/server.js"]
